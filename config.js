@@ -4,11 +4,11 @@
 
 module.exports = {
     // Bot Owner Configuration
-    ownerNumber: ['254759006509'], // Add your number without + or spaces (e.g., 919876543210)
-    ownerName: ['Amon'], // Owner names corresponding to ownerNumber array
+    ownerNumber: ['254116368398], // Add your number without + or spaces (e.g., 919876543210)
+    ownerName: ['unstoppable], // Owner names corresponding to ownerNumber array
     
     // Bot Configuration
-    botName: 'NOVA MD',
+    botName: 'CYNTRON-X,
     botVersion: '1.0.0',
     prefix: '.',
     sessionName: 'session',
