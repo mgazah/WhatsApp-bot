@@ -27,7 +27,7 @@ module.exports = {
           `Usage:\n` +
           `  .antilink on\n` +
           `  .antilink off\n` +
-          `  .antilink set delete | kick\n` +
+          `  .antilink set delete | warn | kick\n` +
           `  .antilink get`
         );
       }
