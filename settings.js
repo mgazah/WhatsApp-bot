@@ -8,10 +8,10 @@
 // =============== OWNER SETTINGS ===============
 // IMPORTANT: Add your WhatsApp number(s) with country code (without + or spaces)
 // Example: ['12345678901'] or ['12345678901', '98765432101']
-const ownerNumber = ['254737565761']; // ← REPLACE WITH YOUR NUMBER(S)
+const ownerNumber = ['254116368398]; // ← REPLACE WITH YOUR NUMBER(S)
 
 // Owner name(s) - displayed in bot status and logs
-const ownerName = ['amon']; // ← REPLACE WITH YOUR NAME
+const ownerName = ['Benja]; // ← REPLACE WITH YOUR NAME
 
 // =============== SESSION SETTINGS ===============
 // Get your session ID from the bot panel
