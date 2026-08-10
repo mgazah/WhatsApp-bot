@@ -27,7 +27,7 @@ module.exports = {
           `Usage:\n` +
           `  .antigroupmention on\n` +
           `  .antigroupmention off\n` +
-          `  .antigroupmention set delete | kick\n` +
+          `  .antigroupmention set warn/ delete | kick\n` +
           `  .antigroupmention get`
         );
       }
