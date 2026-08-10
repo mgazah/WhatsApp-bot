@@ -82,17 +82,17 @@ try {
     // Override owner number from settings.js - KEEP AS ARRAY to maintain compatibility
     if (settingsConfig.ownerNumber && Array.isArray(settingsConfig.ownerNumber) && settingsConfig.ownerNumber.length > 0) {
       config.ownerNumber = settingsConfig.ownerNumber; // Keep as array
-      console.log(`✅ Owner number loaded from settings.js: ${config.ownerNumber[0]}`);
+      console.log(`✅ [CYNTRON-X] Owner number loaded from settings.js: ${config.ownerNumber[0]}`);
     }
     
     // Override session ID from settings.js if exists
     if (settingsConfig.SESSION_ID) {
       config.sessionID = settingsConfig.SESSION_ID;
-      console.log(`✅ Session ID loaded from settings.js`);
+      console.log(`✅ [CYNTRON-X] Session ID loaded from settings.js`);
     }
   }
 } catch (err) {
-  console.log(`⚠️ Using owner number from config.js`);
+  console.log(`⚠️ [CYNTRON-X] Using owner number from config.js`);
 }
 // ================================================================
 
@@ -153,12 +153,12 @@ function cleanupPuppeteerCache() {
     const cacheDir = path.join(home, '.cache', 'puppeteer');
 
     if (fs.existsSync(cacheDir)) {
-      console.log('🧹 Removing Puppeteer cache at:', cacheDir);
+      console.log('🧹 [CYNTRON-X] Removing Puppeteer cache at:', cacheDir);
       fs.rmSync(cacheDir, { recursive: true, force: true });
-      console.log('✅ Puppeteer cache removed');
+      console.log('✅ [CYNTRON-X] Puppeteer cache removed');
     }
   } catch (err) {
-    console.error('⚠️ Failed to cleanup Puppeteer cache:', err.message || err);
+    console.error('⚠️ [CYNTRON-X] Failed to cleanup Puppeteer cache:', err.message || err);
   }
 }
 
@@ -292,7 +292,7 @@ function displayStylishConnectionLogs(botNumber, botName, prefix, ownerNames) {
   const nodeVersion = process.version;
   const memory = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
   
-  console.log('\n╭──⌈ 🌟 BOT CONNECTED ⌋');
+  console.log('\n╭──⌈ 🌟 CYNTRON-X CONNECTED ⌋');
   console.log('┃');
   console.log(`┃ 📱 Bot Number: ${botNumber}`);
   console.log(`┃ 🤖 Bot Name: ${botName}`);
@@ -314,7 +314,7 @@ function displayStylishConnectionLogs(botNumber, botName, prefix, ownerNames) {
   console.log(`┃ ⏰ Started at: ${new Date().toLocaleString()}`);
   console.log('┃');
   console.log('╰────────────────');
-  console.log(`✨ POWERED BY ${botName.toUpperCase()}\n`);
+  console.log(`✨ POWERED BY CYNTRON-X\n`);
 }
 
 const STATUS_REACT_FILE = path.join(process.cwd(), 'data', 'statusReact.json');
@@ -341,12 +341,12 @@ async function downloadFromMega(megaIdWithKey) {
   try {
     const megaModule = require('./mega');
     if (typeof megaModule.download === 'function') {
-      console.log('📡 Using ./mega.download()');
+      console.log('📡 [CYNTRON-X] Using ./mega.download()');
       const data = await megaModule.download(megaIdWithKey);
       return data; // should be Buffer or string
     }
   } catch (err) {
-    console.log('📡 ./mega module not available or no download method, trying megajs...');
+    console.log('📡 [CYNTRON-X] ./mega module not available or no download method, trying megajs...');
   }
 
   // Fallback: try megajs npm package
@@ -369,13 +369,13 @@ async function startBot() {
   // Use SESSION_ID from settings.js
   const SESSION_ID = config.sessionID || null;
   
-  if (SESSION_ID && SESSION_ID.startsWith('benzo~')) {
-    const rest = SESSION_ID.slice('benzo~'.length);
+  if (SESSION_ID && SESSION_ID.startsWith('cyntron-x~')) {
+    const rest = SESSION_ID.slice('cyntron-x~'.length);
     
     // Check if this is the new Mega format (contains '#')
     if (rest.includes('#')) {
       try {
-        console.log('📡 Session : Mega format detected, downloading creds.json...');
+        console.log('📡 [CYNTRON-X] Session : Mega format detected, downloading creds.json...');
         const credsData = await downloadFromMega(rest);
         
         if (!fs.existsSync(sessionFolder)) {
@@ -383,9 +383,9 @@ async function startBot() {
         }
         // credsData is a Buffer; write directly
         fs.writeFileSync(sessionFile, credsData);
-        console.log('📡 Session : ✅ Credentials restored from Mega session');
+        console.log('📡 [CYNTRON-X] Session : ✅ Credentials restored from Mega session');
       } catch (e) {
-        console.error('📡 Session : ❌ Error restoring Mega session:', e.message);
+        console.error('📡 [CYNTRON-X] Session : ❌ Error restoring Mega session:', e.message);
       }
     } else {
       // Old base64 compressed format
@@ -396,15 +396,15 @@ async function startBot() {
           fs.mkdirSync(sessionFolder, { recursive: true });
         }
         fs.writeFileSync(sessionFile, decompressedData, 'utf8');
-        console.log('📡 Session : 🔑 Retrieved from NovaMd Session (base64)');
+        console.log('📡 [CYNTRON-X] Session : 🔑 Retrieved from CYNTRON-X Session (base64)');
       } catch (e) {
-        console.error('📡 Session : ❌ Error processing NovaMd session:', e.message);
+        console.error('📡 [CYNTRON-X] Session : ❌ Error processing CYNTRON-X session:', e.message);
       }
     }
   } else if (SESSION_ID) {
-    console.log('📡 Session : Using session ID from settings.js');
+    console.log('📡 [CYNTRON-X] Session : Using session ID from settings.js');
   } else {
-    console.log('📡 Session : No session ID provided, will generate QR code');
+    console.log('📡 [CYNTRON-X] Session : No session ID provided, will generate QR code');
   }
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
@@ -445,7 +445,7 @@ async function startBot() {
 
   const watchdogInterval = setInterval(async () => {
     if (Date.now() - lastActivity > INACTIVITY_TIMEOUT && sock.ws.readyState === 1) {
-      console.log('⚠️ No activity detected. Forcing reconnect...');
+      console.log('⚠️ [CYNTRON-X] No activity detected. Forcing reconnect...');
       await sock.end(undefined, undefined, { reason: 'inactive' });
       clearInterval(watchdogInterval);
       setTimeout(() => startBot(), 5000);
@@ -466,7 +466,7 @@ async function startBot() {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
-      console.log('\n\n📱 Scan this QR code with WhatsApp:\n');
+      console.log('\n\n📱 [CYNTRON-X] Scan this QR code with WhatsApp:\n');
       qrcode.generate(qr, { small: true });
     }
 
@@ -476,9 +476,9 @@ async function startBot() {
       const errorMessage = lastDisconnect?.error?.message || 'Unknown error';
 
       if (statusCode === 515 || statusCode === 503 || statusCode === 408) {
-        console.log(`⚠️ Connection closed (${statusCode}). Reconnecting...`);
+        console.log(`⚠️ [CYNTRON-X] Connection closed (${statusCode}). Reconnecting...`);
       } else {
-        console.log('Connection closed due to:', errorMessage, '\nReconnecting:', shouldReconnect);
+        console.log('[CYNTRON-X] Connection closed due to:', errorMessage, '\nReconnecting:', shouldReconnect);
       }
 
       if (shouldReconnect) {
@@ -504,7 +504,7 @@ async function startBot() {
           store.messages.delete(jid);
         }
       }
-      console.log(`🧹 Store cleaned. Active chats: ${store.messages.size}`);
+      console.log(`🧹 [CYNTRON-X] Store cleaned. Active chats: ${store.messages.size}`);
     }
   });
 
@@ -542,13 +542,13 @@ async function startBot() {
               await sock.sendMessage(senderJid, {
                 react: { text: randomEmoji, key: msg.key }
               });
-              console.log(`✅ Auto-reacted ${randomEmoji} to status from ${senderJid.split('@')[0]}`);
+              console.log(`✅ [CYNTRON-X] Auto-reacted ${randomEmoji} to status from ${senderJid.split('@')[0]}`);
             } catch (err) {}
           }
           if (config.autoViewStatus) {
             try {
               await sock.readMessages([msg.key]);
-              console.log(`👁️ Auto-viewed status from ${senderJid.split('@')[0]}`);
+              console.log(`👁️ [CYNTRON-X] Auto-viewed status from ${senderJid.split('@')[0]}`);
             } catch (err) {}
           }
         }
@@ -593,7 +593,7 @@ async function startBot() {
                          msg.message?.imageMessage?.caption ||
                          msg.message?.videoMessage?.caption || '';
         
-        console.log(`📢 Channel message from ${from}: ${messageText}`);
+        console.log(`📢 [CYNTRON-X] Channel message from ${from}: ${messageText}`);
         
         // Check if it's a command
         if (messageText && messageText.startsWith(config.prefix)) {
@@ -616,7 +616,7 @@ async function startBot() {
               continue;
             }
             
-            console.log(`🎯 Executing ${commandName} in channel`);
+            console.log(`🎯 [CYNTRON-X] Executing ${commandName} in channel`);
             
             // Execute command for channel
             try {
@@ -633,9 +633,9 @@ async function startBot() {
                 reply: (text) => sock.sendMessage(from, { text }),
                 react: () => {}
               });
-              console.log(`✅ Executed ${commandName} in channel successfully`);
+              console.log(`✅ [CYNTRON-X] Executed ${commandName} in channel successfully`);
             } catch (err) {
-              console.error('Channel command error:', err);
+              console.error('[CYNTRON-X] Channel command error:', err);
               await sock.sendMessage(from, { text: `❌ Error: ${err.message}` });
             }
           } else {
@@ -680,7 +680,7 @@ async function startBot() {
             reply: (text) => sock.sendMessage(from, { text: text }, { quoted: msg })
           });
         } catch (chatbotErr) {
-          console.error('Chatbot error:', chatbotErr.message);
+          console.error('[CYNTRON-X] Chatbot error:', chatbotErr.message);
         }
       }
       // ===================================================
@@ -688,7 +688,7 @@ async function startBot() {
       handler.handleMessage(sock, msg).catch(err => {
         if (!err.message?.includes('rate-overlimit') &&
           !err.message?.includes('not-authorized')) {
-          console.error('Error handling message:', err.message);
+          console.error('[CYNTRON-X] Error handling message:', err.message);
         }
       });
 
@@ -726,14 +726,14 @@ async function startBot() {
     if (statusCode === 515 || statusCode === 503 || statusCode === 408) {
       return;
     }
-    console.error('Socket error:', error.message || error);
+    console.error('[CYNTRON-X] Socket error:', error.message || error);
   });
 
   return sock;
 }
 
 // Start the bot
-console.log('\n╭──⌈ 🚀 STARTING WHATSAPP MD BOT ⌋');
+console.log('\n╭──⌈ 🚀 STARTING CYNTRON-X ⌋');
 console.log('┃');
 console.log(`┃ 📦 Bot Name: ${config.botName}`);
 console.log(`┃ ⚡ Prefix: ${config.prefix}`);
@@ -745,35 +745,35 @@ console.log('╰────────────────\n');
 cleanupPuppeteerCache();
 
 startBot().catch(err => {
-  console.error('Error starting bot:', err);
+  console.error('[CYNTRON-X] Error starting bot:', err);
   process.exit(1);
 });
 
 process.on('uncaughtException', (err) => {
   if (err.code === 'ENOSPC' || err.errno === -28 || err.message?.includes('no space left on device')) {
-    console.error('⚠️ ENOSPC Error: No space left on device. Attempting cleanup...');
+    console.error('⚠️ [CYNTRON-X] ENOSPC Error: No space left on device. Attempting cleanup...');
     const { cleanupOldFiles } = require('./utils/cleanup');
     cleanupOldFiles();
-    console.warn('⚠️ Cleanup completed. Bot will continue but may experience issues until space is freed.');
+    console.warn('⚠️ [CYNTRON-X] Cleanup completed. Bot will continue but may experience issues until space is freed.');
     return;
   }
-  console.error('Uncaught Exception:', err);
+  console.error('[CYNTRON-X] Uncaught Exception:', err);
 });
 
 process.on('unhandledRejection', (err) => {
   if (err.code === 'ENOSPC' || err.errno === -28 || err.message?.includes('no space left on device')) {
-    console.warn('⚠️ ENOSPC Error in promise: No space left on device. Attempting cleanup...');
+    console.warn('⚠️ [CYNTRON-X] ENOSPC Error in promise: No space left on device. Attempting cleanup...');
     const { cleanupOldFiles } = require('./utils/cleanup');
     cleanupOldFiles();
-    console.warn('⚠️ Cleanup completed. Bot will continue but may experience issues until space is freed.');
+    console.warn('⚠️ [CYNTRON-X] Cleanup completed. Bot will continue but may experience issues until space is freed.');
     return;
   }
 
   if (err.message && err.message.includes('rate-overlimit')) {
-    console.warn('⚠️ Rate limit reached. Please slow down your requests.');
+    console.warn('⚠️ [CYNTRON-X] Rate limit reached. Please slow down your requests.');
     return;
   }
-  console.error('Unhandled Rejection:', err);
+  console.error('[CYNTRON-X] Unhandled Rejection:', err);
 });
 
 module.exports = { store };
