@@ -1,5 +1,5 @@
 {
-    "name": "whatsapp-md-bot",
+    "name": "Cyntron-X",
     "version": "1.0.0",
     "description": "WhatsApp MD-Style Multi-Command Bot with Baileys",
     "main": "index.js",
@@ -11,7 +11,7 @@
     },
     "keywords": [
         "whatsapp bot",
-        "NOVA MD",
+        "Cyntron-X",
         "bot",
         "baileys",
         "md"
