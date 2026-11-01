@@ -77,4 +77,36 @@
 #### METHOD 1: RENDER (FREE FOREVER)
 [[Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://dashboard.render.com/new/web)
 
-**Render Settings:**
+
+---
+
+### 👨‍💻 OWNER - CYNTRON-X
+
+<p align="center">
+  <a href="https://wa.me/254116368398?text=Hi+UNSTOPPABLE+I+need+Cyntron-X+bot+help">
+    <img src="https://img.shields.io/badge/Owner-UNSTOPPABLE-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
+  </a>
+  <a href="https://wa.me/254116368398">
+    <img src="https://img.shields.io/badge/WhatsApp-0116368398-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
+  </a>
+  <a href="https://github.com/mgazah">
+    <img src="https://img.shields.io/badge/GitHub-mgazah-black?style=for-the-badge&logo=github" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://wa.me/254116368398"><img src="https://img.shields.io/badge/Chat%20Owner%20On%20WhatsApp-CLICK%20HERE-25D366?style=for-the-badge&logo=whatsapp" /></a>
+</p>
+
+| 👑 Info | Details |
+|---------|---------|
+| **Bot Name** | Cyntron-X |
+| **Owner Name** | UNSTOPPABLE |
+| **Owner Number** | 0116368398 |
+| **WhatsApp Link** | [wa.me/254116368398](https://wa.me/254116368398) |
+| **GitHub** | [github.com/mgazah](https://github.com/mgazah) |
+| **Location** | Nairobi, Kenya 🇰🇪 |
+
+> **Need Help?** Tap the green button above to chat directly with UNSTOPPABLE on WhatsApp! Fast reply ⚡
+
+---
