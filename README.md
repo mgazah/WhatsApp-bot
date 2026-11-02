@@ -1,3 +1,8 @@
+
+<p align="center">
+  <img src="https://i.ibb.co/xxxx/your-unstoppable-logo.png" width="100%" />
+</p>
+
 <p align="center">
   <img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=700&size=30&duration=3000&color=00FF88&center=true&vCenter=true&width=600&lines=⚡+CYNTRON-X+⚡;OWNER:+UNSTOPPABLE;0116368398" />
 </p>
