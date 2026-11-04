@@ -21,6 +21,26 @@ const {
 const logger = P({ level: process.env.LOG_LEVEL || 'info' });
 let starting = false;
 let reconnectTimer;
+const FALLBACK_BAILEYS_VERSION = [2, 3000, 1043857760];
+
+async function getBaileysVersion() {
+  const configured = (process.env.BAILEYS_VERSION || '').trim();
+  if (configured) {
+    const version = configured.split('.').map(Number);
+    if (version.length === 3 && version.every(Number.isInteger)) return version;
+  }
+
+  try {
+    const result = await Promise.race([
+      fetchLatestBaileysVersion(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('version lookup timeout')), 4000))
+    ]);
+    return result.version;
+  } catch (error) {
+    console.warn(`Baileys version lookup skipped: ${error.message}. Using cached version.`);
+    return FALLBACK_BAILEYS_VERSION;
+  }
+}
 
 function normalizeCredentialBuffers(value) {
   if (Array.isArray(value)) return value.map(normalizeCredentialBuffers);
@@ -134,7 +154,7 @@ async function startBot() {
     hydrateAuthFromEnv();
     if (!pairingPhone) assertAuthConfigured();
     const { state, saveCreds } = await useMultiFileAuthState('./auth');
-    const { version } = await fetchLatestBaileysVersion();
+    const version = await getBaileysVersion();
     const sock = makeWASocket({
       version,
       auth: {
