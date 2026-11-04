@@ -98,3 +98,5 @@ https://wa.me/254116368398
 ---
 
 > © 2026 CYNTRON-X | OWNER: UNSTOPPABLE | 0116368398 | MADE IN KENYA 🇰🇪
+
+Built by unstable 
