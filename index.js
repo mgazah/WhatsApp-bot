@@ -1,6 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -58,10 +59,46 @@ function assertAuthConfigured() {
   const credsPath = path.join(process.cwd(), 'auth', 'creds.json');
   if (fs.existsSync(credsPath)) return;
   if (!(process.env.SESSION_ID || '').trim()) {
-    throw new Error(
-      'No WhatsApp auth found. Set SESSION_ID in the hosting panel using PREFIX~BASE64_SESSION, or restore the complete auth/ directory.'
-    );
+    throw new Error('No WhatsApp auth configured.');
   }
+}
+
+function askConsole(question) {
+  if (!process.stdin.isTTY) {
+    throw new Error('No WhatsApp auth found and the hosting console is not interactive. Set SESSION_ID in Pterodactyl or restore auth/.');
+  }
+  if (!global.consolePrompt) {
+    global.consolePrompt = readline.createInterface({ input: process.stdin, output: process.stdout });
+  }
+  return new Promise(resolve => global.consolePrompt.question(question, answer => resolve(answer.trim())));
+}
+
+async function configureAuthFromConsole() {
+  const credsPath = path.join(process.cwd(), 'auth', 'creds.json');
+  if ((process.env.SESSION_ID || '').trim() || fs.existsSync(credsPath)) return { pairingPhone: null };
+
+  console.log('\nCYNTRON-X WhatsApp setup');
+  console.log('1) Request a WhatsApp pairing code');
+  console.log('2) Use a Base64 session ID');
+  const choice = await askConsole('Choose an option (1/2): ');
+
+  if (choice === '1') {
+    let phone = await askConsole('Enter your WhatsApp phone number with country code (digits only): ');
+    phone = phone.replace(/\D/g, '');
+    if (phone.length < 8) throw new Error('Invalid phone number. Include the country code, for example 2547XXXXXXXX.');
+    console.log('A pairing code will be requested after the WhatsApp socket starts.');
+    return { pairingPhone: phone };
+  }
+
+  if (choice === '2') {
+    const sessionId = await askConsole('Paste the session ID (PREFIX~BASE64_SESSION): ');
+    if (!sessionId || !sessionId.includes('~')) throw new Error('Invalid session ID. Expected PREFIX~BASE64_SESSION.');
+    process.env.SESSION_ID = sessionId;
+    hydrateAuthFromEnv();
+    return { pairingPhone: null };
+  }
+
+  throw new Error('Invalid option. Restart the server and choose 1 or 2.');
 }
 
 async function followConfiguredChannels(sock) {
@@ -93,8 +130,9 @@ async function startBot() {
   if (starting) return;
   starting = true;
   try {
+    const { pairingPhone } = await configureAuthFromConsole();
     hydrateAuthFromEnv();
-    assertAuthConfigured();
+    if (!pairingPhone) assertAuthConfigured();
     const { state, saveCreds } = await useMultiFileAuthState('./auth');
     const { version } = await fetchLatestBaileysVersion();
     const sock = makeWASocket({
@@ -110,6 +148,17 @@ async function startBot() {
       syncFullHistory: false,
       generateHighQualityLinkPreview: false
     });
+    if (pairingPhone) {
+      setTimeout(async () => {
+        try {
+          const code = await sock.requestPairingCode(pairingPhone);
+          console.log(`\nWhatsApp pairing code: ${code}`);
+          console.log('Open WhatsApp > Linked devices > Link a device > Link with phone number instead.');
+        } catch (error) {
+          console.error('Pairing-code request failed:', error?.message || error);
+        }
+      }, 1500);
+    }
     starting = false;
     let connectionMessageSent = false;
 
