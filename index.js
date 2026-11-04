@@ -18,10 +18,24 @@ const {
   initializeAntiCall
 } = require('./handler');
 
-const logger = P({ level: process.env.LOG_LEVEL || 'info' });
+const logger = P({
+  level: process.env.BAILEYS_LOG_LEVEL || 'warn',
+  transport: {
+    target: require.resolve('pino-pretty'),
+    options: {
+      colorize: false,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname'
+    }
+  }
+});
 let starting = false;
 let reconnectTimer;
 const FALLBACK_BAILEYS_VERSION = [2, 3000, 1043857760];
+
+function panelLog(section, message) {
+  console.log(`[${section.padEnd(7)}] ${message}`);
+}
 
 async function getBaileysVersion() {
   const configured = (process.env.BAILEYS_VERSION || '').trim();
@@ -37,7 +51,7 @@ async function getBaileysVersion() {
     ]);
     return result.version;
   } catch (error) {
-    console.warn(`Baileys version lookup skipped: ${error.message}. Using cached version.`);
+    panelLog('START', `Version lookup skipped (${error.message}); using cached Baileys version.`);
     return FALLBACK_BAILEYS_VERSION;
   }
 }
@@ -71,7 +85,7 @@ function hydrateAuthFromEnv() {
   fs.mkdirSync(path.dirname(credsPath), { recursive: true });
   fs.writeFileSync(credsPath, JSON.stringify(credentials));
   fs.chmodSync(credsPath, 0o600);
-  console.log(`Hydrated Baileys auth from ${config.sessionPrefix || 'configured'} SESSION_ID`);
+  panelLog('AUTH', `Session loaded from ${config.sessionPrefix || 'configured'} SESSION_ID.`);
   return true;
 }
 
@@ -87,9 +101,9 @@ function clearLocalAuth() {
   const authPath = path.join(process.cwd(), 'auth');
   try {
     if (fs.existsSync(authPath)) fs.rmSync(authPath, { recursive: true, force: true });
-    console.log('Cleared invalid local WhatsApp authentication state.');
+    panelLog('AUTH', 'Cleared invalid local WhatsApp authentication state.');
   } catch (error) {
-    console.error('Could not clear invalid WhatsApp auth:', error?.message || error);
+    panelLog('ERROR', `Could not clear invalid WhatsApp auth: ${error?.message || error}`);
   }
 }
 
@@ -107,16 +121,19 @@ async function configureAuthFromConsole() {
   const credsPath = path.join(process.cwd(), 'auth', 'creds.json');
   if ((process.env.SESSION_ID || '').trim() || fs.existsSync(credsPath)) return { pairingPhone: null };
 
-  console.log('\nCYNTRON-X WhatsApp setup');
-  console.log('1) Request a WhatsApp pairing code');
-  console.log('2) Use a Base64 session ID');
+  console.log('\n┌──────────────────────────────────────────┐');
+  console.log('│          CYNTRON-X WHATSAPP SETUP        │');
+  console.log('├──────────────────────────────────────────┤');
+  console.log('│  1. Request a WhatsApp pairing code      │');
+  console.log('│  2. Use a Base64 session ID              │');
+  console.log('└──────────────────────────────────────────┘');
   const choice = await askConsole('Choose an option (1/2): ');
 
   if (choice === '1') {
     let phone = await askConsole('Enter your WhatsApp phone number with country code (digits only): ');
     phone = phone.replace(/\D/g, '');
     if (phone.length < 8) throw new Error('Invalid phone number. Include the country code, for example 2547XXXXXXXX.');
-    console.log('A pairing code will be requested after the WhatsApp socket starts.');
+    panelLog('AUTH', 'Pairing code will be requested after the WhatsApp socket starts.');
     return { pairingPhone: phone };
   }
 
@@ -140,9 +157,9 @@ async function followConfiguredChannels(sock) {
   for (const jid of channels) {
     try {
       await sock.newsletterFollow(jid);
-      console.log(`Autofollowed newsletter channel: ${jid}`);
+      panelLog('CHANNEL', `Following ${jid}`);
     } catch (error) {
-      console.error(`Could not follow newsletter channel ${jid}:`, error?.message || error);
+      panelLog('ERROR', `Could not follow newsletter channel ${jid}: ${error?.message || error}`);
     }
   }
 }
@@ -151,15 +168,17 @@ async function sendConnectionMessage(sock) {
   const userId = sock.user?.id;
   if (!userId) throw new Error('WhatsApp user ID is not available after connection open');
   const recipient = `${userId.split(':')[0].split('@')[0]}@s.whatsapp.net`;
-  const text = `🟢 *${config.botName} CONNECTED*\n\n✅ WhatsApp session is active.\n✅ Commands are ready.\n\nPrefix: ${config.prefix}\nTime: ${new Date().toISOString()}`;
+  const account = userId.split(':')[0].split('@')[0];
+  const text = `╭─❖ *${config.botName} ONLINE* ❖─╮\n│\n│ ✅ WhatsApp connected\n│ ✅ Commands are ready\n│ ✅ Session is active\n│\n│ *Account:* ${account}\n│ *Prefix:* ${config.prefix}\n│\n╰────────────────────────╯`;
   await sock.sendMessage(recipient, { text });
-  console.log(`Connection message sent to ${recipient}`);
+  panelLog('WHATSAPP', `Connection message sent to ${recipient}.`);
 }
 
 async function startBot() {
   if (starting) return;
   starting = true;
   try {
+    panelLog('START', `Starting ${config.botName}...`);
     const { pairingPhone } = await configureAuthFromConsole();
     hydrateAuthFromEnv();
     if (!pairingPhone) assertAuthConfigured();
@@ -182,10 +201,13 @@ async function startBot() {
       setTimeout(async () => {
         try {
           const code = await sock.requestPairingCode(pairingPhone);
-          console.log(`\nWhatsApp pairing code: ${code}`);
-          console.log('Open WhatsApp > Linked devices > Link a device > Link with phone number instead.');
+          console.log('\n┌──────────────────────────────────────────┐');
+          console.log(`│  WHATSAPP PAIRING CODE: ${code}            │`);
+          console.log('│  WhatsApp → Linked devices → Link with    │');
+          console.log('│  phone number instead                     │');
+          console.log('└──────────────────────────────────────────┘');
         } catch (error) {
-          console.error('Pairing-code request failed:', error?.message || error);
+          panelLog('ERROR', `Pairing-code request failed: ${error?.message || error}`);
         }
       }, 1500);
     }
@@ -197,15 +219,15 @@ async function startBot() {
 
     sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
       if (connection === 'open') {
-        console.log(`CYNTRON-X connected as ${sock.user?.id || 'unknown account'}`);
+        panelLog('WHATSAPP', `Connected as ${sock.user?.id || 'unknown account'}.`);
         if (!connectionMessageSent) {
           connectionMessageSent = true;
           sendConnectionMessage(sock).catch(error => {
             connectionMessageSent = false;
-            console.error('Connection message failed:', error?.message || error);
+            panelLog('ERROR', `Connection message failed: ${error?.message || error}`);
           });
         }
-        followConfiguredChannels(sock).catch(error => console.error('Autofollow failed:', error));
+        followConfiguredChannels(sock).catch(error => panelLog('ERROR', `Autofollow failed: ${error?.message || error}`));
       } else if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         if (statusCode === 401) {
@@ -213,14 +235,14 @@ async function startBot() {
           // Do not reuse the rejected environment session on the next start.
           // The interactive setup will ask for a new session or pairing code.
           delete process.env.SESSION_ID;
-          console.error('WhatsApp rejected this session (401). Restarting setup for fresh credentials.');
+          panelLog('AUTH', 'WhatsApp rejected this session (401). Restarting setup for fresh credentials.');
         }
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-        console.error(`WhatsApp connection closed (code ${statusCode || 'unknown'}). Reconnect: ${shouldReconnect}`);
+        panelLog('WA-CLOSE', `Connection closed (code ${statusCode || 'unknown'}). Reconnect: ${shouldReconnect}.`);
         if (shouldReconnect && !reconnectTimer) {
           reconnectTimer = setTimeout(() => {
             reconnectTimer = undefined;
-            startBot().catch(error => console.error('Reconnect failed:', error));
+            startBot().catch(error => panelLog('ERROR', `Reconnect failed: ${error?.message || error}`));
           }, 3000);
         }
       }
@@ -232,9 +254,9 @@ async function startBot() {
         if (!message?.message || message.key?.fromMe) continue;
         try {
           await handleMessage(sock, message);
-          console.log(`Processed message ${message.key?.id || 'unknown'} from ${message.key?.remoteJid || 'unknown'}`);
+          panelLog('MESSAGE', `Processed ${message.key?.remoteJid || 'unknown'}.`);
         } catch (error) {
-          console.error('Message handler error:', error.message || error);
+          panelLog('ERROR', `Message handler error: ${error.message || error}`);
         }
       }
     });
@@ -257,7 +279,7 @@ async function startBot() {
 }
 
 startBot().catch((error) => {
-  console.error('Fatal startup error:', error);
+  panelLog('FATAL', error?.message || error);
   process.exitCode = 1;
 });
 
