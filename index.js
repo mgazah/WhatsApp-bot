@@ -83,6 +83,16 @@ function assertAuthConfigured() {
   }
 }
 
+function clearLocalAuth() {
+  const authPath = path.join(process.cwd(), 'auth');
+  try {
+    if (fs.existsSync(authPath)) fs.rmSync(authPath, { recursive: true, force: true });
+    console.log('Cleared invalid local WhatsApp authentication state.');
+  } catch (error) {
+    console.error('Could not clear invalid WhatsApp auth:', error?.message || error);
+  }
+}
+
 function askConsole(question) {
   if (!process.stdin.isTTY) {
     throw new Error('No WhatsApp auth found and the hosting console is not interactive. Set SESSION_ID in Pterodactyl or restore auth/.');
@@ -198,6 +208,13 @@ async function startBot() {
         followConfiguredChannels(sock).catch(error => console.error('Autofollow failed:', error));
       } else if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
+        if (statusCode === 401) {
+          clearLocalAuth();
+          // Do not reuse the rejected environment session on the next start.
+          // The interactive setup will ask for a new session or pairing code.
+          delete process.env.SESSION_ID;
+          console.error('WhatsApp rejected this session (401). Restarting setup for fresh credentials.');
+        }
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
         console.error(`WhatsApp connection closed (code ${statusCode || 'unknown'}). Reconnect: ${shouldReconnect}`);
         if (shouldReconnect && !reconnectTimer) {
