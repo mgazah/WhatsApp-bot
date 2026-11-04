@@ -26,6 +26,7 @@ const loadCommands = () => {
         try {
           const command = require(path.join(categoryPath, file));
           if (command.name) {
+            command.category = command.category || category;
             commands.set(command.name, command);
             if (command.aliases) {
               command.aliases.forEach(alias => {
@@ -44,4 +45,3 @@ const loadCommands = () => {
 };
 
 module.exports = { loadCommands };
-

@@ -151,6 +151,34 @@ const APIs = {
   },
   
   // Song Download APIs
+  getKnightAudioByUrl: async (youtubeUrl, format = '128kbps') => {
+    const response = await axios.get('https://knightbotapi.stream/api/download/ytaudio', {
+      params: { apikey: 'knight', format, url: youtubeUrl },
+      timeout: 60000,
+      headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }
+    });
+    const result = response?.data?.result;
+    const download = result?.download || result?.dl_url || result?.dl;
+    if (!response?.data?.success || !download) throw new Error('KnightBot returned no audio URL');
+    return { download, title: result.title, thumbnail: result.thumbnail, duration: result.duration, source: 'KnightBot' };
+  },
+
+  getApixAudioByUrl: async (youtubeUrl) => {
+    const apiKey = process.env.APIX_API_KEY;
+    if (!apiKey) throw new Error('APIX_API_KEY is not configured');
+    const match = String(youtubeUrl).match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/i);
+    const id = match ? match[1] : (/^[\w-]{11}$/.test(String(youtubeUrl).trim()) ? String(youtubeUrl).trim() : null);
+    if (!id) throw new Error('Could not extract a YouTube video ID');
+    const response = await axios.get('https://apix.wolvarex.com/api/music/ytmp3-download', {
+      params: { id, provider: 'youtube', key: apiKey },
+      timeout: 60000,
+      headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }
+    });
+    const data = response?.data || {};
+    const download = data.download || data.url || data.proxyUrl || data.proxyURL || data.downloadUrl;
+    if (!data.success || !download) throw new Error(data.error || data.message || 'Apix returned no audio URL');
+    return { download, title: data.title, thumbnail: data.thumbnail, source: 'Apix' };
+  },
   getIzumiDownloadByUrl: async (youtubeUrl) => {
     const AXIOS_DEFAULTS = {
       timeout: 60000,
@@ -460,6 +488,18 @@ const APIs = {
     }
   },
   
+  getTikTokDownloadTikwm: async (url) => {
+    const response = await axios.get('https://www.tikwm.com/api/', {
+      params: { url, hd: 1 },
+      timeout: 30000,
+      headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' }
+    });
+    const data = response?.data?.data;
+    const videoUrl = data?.hdplay || data?.play || data?.wmplay;
+    if (response?.data?.code !== 0 || !videoUrl) throw new Error(response?.data?.msg || 'TikWM returned no video URL');
+    return { videoUrl, title: data.title || 'TikTok Video', thumbnail: data.cover, source: 'TikWM' };
+  },
+
   // Screenshot Website API
   screenshotWebsite: async (url) => {
     try {

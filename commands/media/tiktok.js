@@ -76,16 +76,27 @@ module.exports = {
         let videoUrl = null;
         let title = null;
         
-        // Try Siputzx API first
+        // TikWM was verified against a public TikTok URL and is the primary provider.
         try {
-          const result = await APIs.getTikTokDownload(url);
+          const result = await APIs.getTikTokDownloadTikwm(url);
           videoUrl = result.videoUrl;
           title = result.title;
-        } catch (apiError) {
-          console.error(`Siputzx API failed: ${apiError.message}`);
+        } catch (tikwmError) {
+          console.error(`TikWM API failed: ${tikwmError.message}`);
+        }
+
+        // Try Siputzx API as a secondary provider.
+        if (!videoUrl) {
+          try {
+            const result = await APIs.getTikTokDownload(url);
+            videoUrl = result.videoUrl;
+            title = result.title;
+          } catch (apiError) {
+            console.error(`Siputzx API failed: ${apiError.message}`);
+          }
         }
         
-        // If Siputzx API didn't work, try ttdl method
+        // If the API providers did not work, try the scraper fallback.
         if (!videoUrl) {
           try {
             let downloadData = await ttdl(url);

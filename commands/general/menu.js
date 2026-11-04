@@ -157,9 +157,15 @@ function generateMenuText(categories, totalCommands, extra, displayMode) {
   menuText += `╰────────────────\n\n`;
   
   // Categories order
-  const categoryOrder = ['general', 'ai', 'group', 'admin', 'owner', 'media', 'fun', 'utility', 'anime', 'textmaker', 'downloader', 'converter', 'sports', 'tools'];
+  const categoryOrder = ['general', 'ai', 'group', 'admin', 'owner', 'media', 'fun', 'utility', 'anime', 'textmaker', 'downloader', 'converter', 'sports', 'tool', 'tools'];
+  const orderedCategories = [
+    ...categoryOrder,
+    ...Object.keys(categories)
+      .filter(category => !categoryOrder.includes(category))
+      .sort()
+  ];
   
-  for (const category of categoryOrder) {
+  for (const category of orderedCategories) {
     if (categories[category] && categories[category].length > 0) {
       const categoryIcons = {
         general: '📌', ai: '🧠', group: '👥', admin: '🛡️', owner: '👑',
@@ -224,27 +230,30 @@ module.exports = {
         
         if (fs.existsSync(imagePath)) {
           const imageBuffer = fs.readFileSync(imagePath);
-          await sock.sendMessage(extra.from, {
-            image: imageBuffer,
-            caption: menuText,
-            mentions: [sender],
-            contextInfo: {
-              forwardingScore: 1,
-              isForwarded: true,
-              forwardedNewsletterMessageInfo: {
-                newsletterJid: config.newsletterJid || '120363161513685998@newsletter',
-                newsletterName: config.botName,
-                serverMessageId: -1
+          try {
+            await sock.sendMessage(extra.from, {
+              image: imageBuffer,
+              caption: menuText,
+              mentions: [sender],
+              contextInfo: {
+                forwardingScore: 1,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                  newsletterJid: config.newsletterJid || '120363161513685998@newsletter',
+                  newsletterName: config.botName,
+                  serverMessageId: -1
+                }
               }
-            }
-          }, { quoted: msg });
-        } else {
-          await sock.sendMessage(extra.from, { text: menuText, mentions: [sender] }, { quoted: msg });
+            }, { quoted: msg });
+            return;
+          } catch (mediaError) {
+            console.error('Menu image upload failed; falling back to text:', mediaError.message || mediaError);
+          }
         }
-      } else {
-        // Mode 2: Text Only
-        await sock.sendMessage(extra.from, { text: menuText, mentions: [sender] }, { quoted: msg });
       }
+
+      // Mode 2, missing image, or failed media upload: always send text.
+      await sock.sendMessage(extra.from, { text: menuText, mentions: [sender] }, { quoted: msg });
       
     } catch (error) {
       await extra.reply(`❌ Error: ${error.message}`);

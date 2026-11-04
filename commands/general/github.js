@@ -1,100 +1,53 @@
 /**
- * GitHub Command - Show bot GitHub repository and stats
+ * GitHub Command - Show the exact bot repository and its details
  */
 
 const axios = require('axios');
 const config = require('../../config');
 
-module.exports = {
-    name: 'github',
-    aliases: ['repo', 'git', 'source', 'sc', 'script'],
-    category: 'general',
-    description: 'Show bot GitHub repository and statistics',
-    usage: '.github',
-    ownerOnly: false,
+const REPOSITORY_URL = 'https://github.com/mgazah/WhatsApp-bot';
+const API_URL = 'https://api.github.com/repos/mgazah/WhatsApp-bot';
 
-    async execute(sock, msg, args, extra) {
-        try {
-            const chatId = extra.from;
-            
-            // GitHub repository URL
-            const repoUrl = 'https://github.com/AmonTech1/NOVA-MD';
-            const apiUrl = 'https://api.github.com/repos/AmonTech1/NOVA-MD';
-            
-            // Send loading message
-            await extra.reply('⏳ Fetching GitHub repository information...');
-            
-            try {
-                // Fetch repository data from GitHub API
-                const response = await axios.get(apiUrl, {
-                    headers: {
-                        'User-Agent': 'NOVA-MD'
-                    }
-                });
-                
-                const repo = response.data;
-                
-                // Format the response with new stylish design
-                let message = `╭──⌈ 🐙 GITHUB REPOSITORY ⌋
+module.exports = {
+  name: 'github',
+  aliases: ['repo', 'git', 'source', 'sc', 'script'],
+  category: 'general',
+  description: 'Show the exact bot repository and details',
+  usage: '.repo',
+  ownerOnly: false,
+
+  async execute(sock, msg, args, extra) {
+    const chatId = extra?.from || msg?.key?.remoteJid;
+
+    try {
+      const response = await axios.get(API_URL, {
+        headers: { 'User-Agent': 'CYNTRON-X' },
+        timeout: 8000
+      });
+      const repo = response.data;
+      const message = `╭──⌈ 🐙 GITHUB REPOSITORY ⌋
 ┃
-┃ 🤖 Bot Name: ${config.botName}
-┃ 📦 Repository: ${repo.name}
+┃ 🤖 Bot: ${config.botName}
+┃ 📦 Repository: ${repo.full_name}
 ┃ 👨‍💻 Owner: ${repo.owner.login}
 ┃
-┃ 📄 Description:
-┃ ${repo.description || 'No description provided'}
+┃ 📄 ${repo.description || 'No description provided'}
 ┃
-┃ 🔗 URL: ${repo.html_url}
-┃
-╰────────────────
-
-╭──⌈ 📊 STATISTICS ⌋
-┃
+┃ 🔗 URL: ${REPOSITORY_URL}
 ┃ ⭐ Stars: ${repo.stargazers_count.toLocaleString()}
 ┃ 🍴 Forks: ${repo.forks_count.toLocaleString()}
-┃ 👁️ Watchers: ${repo.watchers_count.toLocaleString()}
-┃ 📦 Size: ${(repo.size / 1024).toFixed(2)} MB
-┃ ⚠️ Issues: ${repo.open_issues_count}
+┃ ⚠️ Open issues: ${repo.open_issues_count.toLocaleString()}
 ┃
 ╰────────────────
 
-╭──⌈ 🔗 QUICK LINKS ⌋
-┃
-┃ ⭐ Star: ${repo.html_url}/stargazers
-┃ 🍴 Fork: ${repo.html_url}/fork
-┃ 📥 Clone: git clone ${repo.clone_url}
-┃
-╰────────────────
+✨ POWERED BY ${config.botName.toUpperCase()} ✨`;
 
-✨ POWERED BY ${config.botName.toUpperCase()}`;
-                
-                await sock.sendMessage(chatId, { text: message }, { quoted: msg });
-                
-            } catch (apiError) {
-                console.error('GitHub API Error:', apiError.message);
-                
-                // Fallback message with stylish design
-                let fallbackMessage = `╭──⌈ 🐙 GITHUB REPOSITORY ⌋
-┃
-┃ 🤖 Bot Name: ${config.botName}
-┃ 📦 Repository: NOVA-MD
-┃ 👨‍💻 Owner: AmonTech1
-┃
-┃ 🔗 URL: ${repoUrl}
-┃
-╰────────────────
-
-⚠️ Note: Unable to fetch real-time statistics.
-Please visit the repository directly for latest stats.
-
-✨ POWERED BY ${config.botName.toUpperCase()}`;
-                
-                await sock.sendMessage(chatId, { text: fallbackMessage }, { quoted: msg });
-            }
-            
-        } catch (error) {
-            console.error('GitHub command error:', error);
-            await extra.reply(`❌ Error: ${error.message}`);
-        }
+      await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+    } catch (error) {
+      console.error('GitHub repository lookup failed:', error?.message || error);
+      await sock.sendMessage(chatId, {
+        text: `📦 ${config.botName} repository\n\n🔗 ${REPOSITORY_URL}`
+      }, { quoted: msg });
     }
+  }
 };

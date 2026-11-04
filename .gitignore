@@ -1,0 +1,17 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# WhatsApp/Baileys credentials and session backups
+auth/
+auth-backup-*/
+
+# Dependencies
+node_modules/
+
+# Local runtime state
+data/
+database/
+*.log
+npm-debug.log*
