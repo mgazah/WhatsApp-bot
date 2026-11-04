@@ -54,6 +54,16 @@ function hydrateAuthFromEnv() {
   return true;
 }
 
+function assertAuthConfigured() {
+  const credsPath = path.join(process.cwd(), 'auth', 'creds.json');
+  if (fs.existsSync(credsPath)) return;
+  if (!(process.env.SESSION_ID || '').trim()) {
+    throw new Error(
+      'No WhatsApp auth found. Set SESSION_ID in the hosting panel using PREFIX~BASE64_SESSION, or restore the complete auth/ directory.'
+    );
+  }
+}
+
 async function followConfiguredChannels(sock) {
   const channels = Array.isArray(config.autofollowChannels) ? config.autofollowChannels : [];
   if (typeof sock.newsletterFollow !== 'function') {
@@ -84,6 +94,7 @@ async function startBot() {
   starting = true;
   try {
     hydrateAuthFromEnv();
+    assertAuthConfigured();
     const { state, saveCreds } = await useMultiFileAuthState('./auth');
     const { version } = await fetchLatestBaileysVersion();
     const sock = makeWASocket({
